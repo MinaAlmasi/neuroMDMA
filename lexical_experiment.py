@@ -38,9 +38,9 @@ outro_text = "Thank you ..."
 trial_text = "Welcome to the trial ..."
 
 #### Wordlists ####
-real = ["bread", "butter"]
-center_shuffle = ["baerd","bettur"]
-fully_shuffle = ["dreba","terbut"]
+real = ["krone", "penge", "minut", "grund", "måned", "skole", "aften", "parti", "antal", "musik", "kirke", "sæson", "kraft", "aktie", "medie", "firma", "hoved", "pause", "værdi", "butik", "fokus"]
+center_shuffle = ["knore", "pnege", "munit", "gnurd", "menåd", "sloke", "atfen", "patri", "atnal", "misuk", "krike", "sosæn", "karft", "atike", "meide", "frima", "hevod", "pasue", "vrædi", "bituk", "fukos"]
+fully_shuffle = ["rekon", "gepen", "nimtu", "drugn", "dåmen", "koles", "netaf", "irtap", "talan", "iksum", "ekkir", "næsno", "tarfk", "etiak", "emeid", "arfim", "vedoh", "sapeu", "ridæv", "iktub", "sofku"]
 
 unshuffled = real + center_shuffle + fully_shuffle
 word_list = random.sample(unshuffled, k = len(unshuffled))
@@ -96,11 +96,7 @@ def show_stimuli(word):
     stim.draw()
     win.flip()
 
-def keypress():
-    key = event.waitKeys(keyList = ["j", "n" "escape"]) [0] # "j" for "JA" and "n" for "NEJ"
-    if key == "escape": #escape key to quit the programme
-        core.quit()
-
+keys = ["j", "n", "escape"] # "j" for "JA" and "n" for "NEJ"
 
 ##### RUNNING THE EXPERIMENT #####
 # trial run
@@ -118,10 +114,14 @@ for n in range(len(word_list)):
     fix_cross(numbers[n])
     show_stimuli(word_list[n])
     clock.reset()
-    if keypress() == "j":
+
+    keypress = event.waitKeys(keyList=keys)
+    if keypress[0] == "j":
         decision = "ja"
-    elif keypress() == "n":
+    elif keypress[0] == "n":
         decision = "nej" 
+    elif keypress[0] == "escape": #escape key to quit the programme
+        core.quit()
     reaction_time = clock.getTime()
 
     logfile = logfile.append({
@@ -130,7 +130,7 @@ for n in range(len(word_list)):
         "trial": n,
         "age": Age,
         "gender": Gender,
-        "stimulus": word_list[n],
+        "word": word_list[n],
         "decision": decision,
         "reaction_time": reaction_time}, ignore_index = True)
 
