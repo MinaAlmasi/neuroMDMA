@@ -38,13 +38,26 @@ outro_text = "Thank you ..."
 trial_text = "Welcome to the trial ..."
 
 #### Wordlists ####
+import random
+# defining the words
 real = ["krone", "penge", "minut", "grund", "måned", "skole", "aften", "parti", "antal", "musik", "kirke", "sæson", "kraft", "aktie", "medie", "firma", "hoved", "pause", "værdi", "butik", "fokus"]
 center_shuffle = ["knore", "pnege", "munit", "gnurd", "menåd", "sloke", "atfen", "patri", "atnal", "misuk", "krike", "sosæn", "karft", "atike", "meide", "frima", "hevod", "pasue", "vrædi", "bituk", "fukos"]
 fully_shuffle = ["rekon", "gepen", "nimtu", "drugn", "dåmen", "koles", "netaf", "irtap", "talan", "iksum", "ekkir", "næsno", "tarfk", "etiak", "emeid", "arfim", "vedoh", "sapeu", "ridæv", "iktub", "sofku"]
 
+# combining the lists 
 unshuffled = real + center_shuffle + fully_shuffle
-word_list = random.sample(unshuffled, k = len(unshuffled))
+labels = ("real," * len(real) + "center_shuffle," * len(center_shuffle) + "fully_shuffle," * len(fully_shuffle)).split(",")
+labels = labels[0:-1]
 
+# adding word type 
+word_dict_unshuffled = {key:value for key, value in zip(unshuffled, labels)}
+
+# shuffling 
+l = list(word_dict_unshuffled.items()) #creating an ordered list of the items 
+random.shuffle(l) #shuffling the list
+word_dict_shuffled = dict(l) #remaking the dictionary
+
+# trial words
 trial_words = ["debat", "dabet", "betad"] #real, center_shuffle, fully_shuffle
 
 #### SETTING UP EXPERIMENT #### 
@@ -110,9 +123,9 @@ for word in range(len(trial_words)):
         decision = "nej"
 '''
 
-for n in range(len(word_list)):
+for n in range(len(word_dict_shuffled)):
     fix_cross(numbers[n])
-    show_stimuli(word_list[n])
+    show_stimuli(word_dict_shuffled.keys()[n])
     clock.reset()
 
     keypress = event.waitKeys(keyList=keys)
@@ -130,7 +143,8 @@ for n in range(len(word_list)):
         "trial": n,
         "age": Age,
         "gender": Gender,
-        "word": word_list[n],
+        "word": word_dict_shuffled.keys()[n],
+        "word_type": word_dict_shuffled.values()[n],
         "decision": decision,
         "reaction_time": reaction_time}, ignore_index = True)
 
