@@ -9,6 +9,17 @@ import pandas as pd
 import os
 import numpy as np
 import random
+from triggers import setParallelData
+
+# Monitor parameters
+MON_DISTANCE = 60  # Distance between subject's eyes and monitor
+MON_WIDTH = 20  # Width of your monitor in cm
+MON_SIZE = [1200, 1000]  # Pixel-dimensions of your monitor
+FRAME_RATE = 60 # Hz  [120]
+SAVE_FOLDER = 'faceWord_exp_data'  # Log is saved to this folder. The folder is created if it does not exist.
+RUNS = 3 # Number of sessions to loop over (useful for EEG experiment)
+MAX_DURATION_SEC = 20
+MAX_FRAMES = FRAME_RATE * MAX_DURATION_SEC
 
 
 #### preparing GUI ####
@@ -83,8 +94,9 @@ filename = "logfiles/logfile_{}_{}.csv".format(ID, date)
 # setting relative logfile path
 path = "logfiles/"
 
-# initialising clock
+# initialising clock and making sure trigger is off
 clock = core.Clock()
+pullTriggerDown = False
 
 ##### SETTING UP FUNCTIONS #####
 # displaying text
@@ -106,10 +118,53 @@ def fix_cross(seconds):
     core.wait(seconds)
 
 # displaying stimuli
-def show_stimuli(word):
-    stim = visual.TextStim(win, text = word, height = 0.3)
-    stim.draw()
-    win.flip()
+def show_stimuli(word,wordtype):
+    for frame in range(MAX_FRAMES):
+        stim = visual.TextStim(win, text = word, height = 0.3)
+        stim.draw()
+        if frame == 0:
+            win.callOnFlip(setParallelData, word_trigger(wordtype))
+            pullTriggerDown = True
+        win.flip()
+        if pullTriggerDown:
+            win.callOnFlip(setParallelData, 0)
+            pullTriggerDown = False
+    clock.reset()
+
+    keypress = event.waitKeys(keyList=keys)
+    if keypress[0] == "j":
+        decision = "ja"
+    elif keypress[0] == "n":
+        decision = "nej"
+    elif keypress[0] == "escape":  # escape key to quit the programme
+        logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
+        logfile.to_csv(logfile_name)
+        core.quit()
+    reaction_time = clock.getTime()
+
+# setting triggers
+def word_trigger(wordtype):
+    if wordtype == "real":
+        TRIG_W = 1
+    elif wordtype == "center_shuffle":
+        TRIG_W = 2
+    elif wordtype == "fully_shuffle":
+        TRIG_W = 3
+
+def decision_trigger(wordtype, decision):
+    if wordtype == "real" and decision == "ja":
+        TRIG_D = 11
+    elif wordtype == "real" and decision == "nej":
+        TRIG_D = 21
+    elif wordtype == "center_shuffle" and decision == "ja":
+        TRIG_D = 12
+    elif wordtype == "center_shuffle" and decision == "nej":
+        TRIG_D = 22
+    elif wordtype == "fully_shuffle" and decision == "ja":
+        TRIG_D = 13
+    elif wordtype == "fully_shuffle" and decision == "nej":
+        TRIG_D = 23
+
 
 keys = ["j", "n", "escape"] # "j" for "JA" and "n" for "NEJ"
 
@@ -127,18 +182,6 @@ for n in range(len(trial_words)):
 for n in range(len(word_dict_shuffled)):
     fix_cross(numbers[n])
     show_stimuli(list(word_dict_shuffled)[n])
-    clock.reset()
-
-    keypress = event.waitKeys(keyList=keys)
-    if keypress[0] == "j":
-        decision = "ja"
-    elif keypress[0] == "n":
-        decision = "nej"
-    elif keypress[0] == "escape": #escape key to quit the programme
-        logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
-        logfile.to_csv(logfile_name)
-        core.quit()
-    reaction_time = clock.getTime()
 
     logfile = logfile.append({
         "time_stamp": date,
