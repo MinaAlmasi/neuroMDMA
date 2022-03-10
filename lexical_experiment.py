@@ -39,28 +39,30 @@ trial_text = "Welcome to the trial ..."
 
 #### Wordlists ####
 import random
+
 # defining the words
 real = ["krone", "penge", "minut", "grund", "måned", "skole", "aften", "parti", "antal", "musik", "kirke", "sæson", "kraft", "aktie", "medie", "firma", "hoved", "pause", "værdi", "butik", "fokus"]
 center_shuffle = ["knore", "pnege", "munit", "gnurd", "menåd", "sloke", "atfen", "patri", "atnal", "misuk", "krike", "sosæn", "karft", "atike", "meide", "frima", "hevod", "pasue", "vrædi", "bituk", "fukos"]
 fully_shuffle = ["rekon", "gepen", "nimtu", "drugn", "dåmen", "koles", "netaf", "irtap", "talan", "iksum", "ekkir", "næsno", "tarfk", "etiak", "emeid", "arfim", "vedoh", "sapeu", "ridæv", "iktub", "sofku"]
 
-# combining the lists 
+# combining the lists
 unshuffled = real + center_shuffle + fully_shuffle
 labels = ("real," * len(real) + "center_shuffle," * len(center_shuffle) + "fully_shuffle," * len(fully_shuffle)).split(",")
 labels = labels[0:-1]
 
-# adding word type 
+# adding word type
 word_dict_unshuffled = {key:value for key, value in zip(unshuffled, labels)}
 
-# shuffling 
-l = list(word_dict_unshuffled.items()) #creating an ordered list of the items 
+# shuffling
+l = list(word_dict_unshuffled.items()) #creating an ordered list of the items
 random.shuffle(l) #shuffling the list
 word_dict_shuffled = dict(l) #remaking the dictionary
 
 # trial words
 trial_words = ["debat", "dabet", "betad"] #real, center_shuffle, fully_shuffle
+trial_fixation_time = [2, 4, 3]
 
-#### SETTING UP EXPERIMENT #### 
+#### SETTING UP EXPERIMENT ####
 # setting up window
 win = visual.Window(fullscr = False, color = "black", monitor = "monitor")
 
@@ -78,14 +80,14 @@ if not os.path.exists("logfiles"):
 DATA = pd.DataFrame(columns = ["time_stamp", "global_time", "ID", "trigger", "Age", "Gender"])
 filename = "logfiles/logfile_{}_{}.csv".format(ID, date)
 
-# setting relative logfile path 
+# setting relative logfile path
 path = "logfiles/"
 
-# initialising clock 
+# initialising clock
 clock = core.Clock()
 
-##### SETTING UP FUNCTIONS ##### 
-# displaying text 
+##### SETTING UP FUNCTIONS #####
+# displaying text
 def info(string, wait = 0):
     disp = visual.TextStim(win, text=string, height=0.2)
     disp.draw()
@@ -94,9 +96,9 @@ def info(string, wait = 0):
     event.waitKeys()
     win.flip()
 
-# displaying fixation cross 
+# displaying fixation cross
 stim_fix = visual.TextStim(win, '+')
-numbers = np.random.uniform(low=2.0, high=5.0, size=63) #defining the varying secs fixation crosses 
+numbers = np.random.uniform(low=2.0, high=5.0, size=63) #defining the varying secs fixation crosses
 
 def fix_cross(seconds):
     stim_fix.draw()
@@ -113,27 +115,28 @@ keys = ["j", "n", "escape"] # "j" for "JA" and "n" for "NEJ"
 
 ##### RUNNING THE EXPERIMENT #####
 # trial run
-'''
-for word in range(len(trial_words)):
-    #fix_cross(numbers[word])
-    show_stimuli(trial_words[word])
-    if keypress() == "j":
-        decision = "ja"
-    elif keypress() == "n":
-        decision = "nej"
-'''
+for n in range(len(trial_words)):
+    fix_cross(trial_fixation_time[n])
+    show_stimuli(trial_words[n])
 
+    keypress = event.waitKeys(keyList=keys)
+    if keypress[0] == "escape":  # escape key to quit the programme
+        core.quit()
+
+# real experiment
 for n in range(len(word_dict_shuffled)):
     fix_cross(numbers[n])
-    show_stimuli(word_dict_shuffled.keys()[n])
+    show_stimuli(list(word_dict_shuffled)[n])
     clock.reset()
 
     keypress = event.waitKeys(keyList=keys)
     if keypress[0] == "j":
         decision = "ja"
     elif keypress[0] == "n":
-        decision = "nej" 
+        decision = "nej"
     elif keypress[0] == "escape": #escape key to quit the programme
+        logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
+        logfile.to_csv(logfile_name)
         core.quit()
     reaction_time = clock.getTime()
 
@@ -143,8 +146,8 @@ for n in range(len(word_dict_shuffled)):
         "trial": n,
         "age": Age,
         "gender": Gender,
-        "word": word_dict_shuffled.keys()[n],
-        "word_type": word_dict_shuffled.values()[n],
+        "word": list(word_dict_shuffled)[n],
+        "wordtype": list(word_dict_shuffled.values())[n],
         "decision": decision,
         "reaction_time": reaction_time}, ignore_index = True)
 
@@ -153,4 +156,3 @@ logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
 
 # Saving the data our directory
 logfile.to_csv(logfile_name)
-
