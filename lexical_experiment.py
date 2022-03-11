@@ -38,17 +38,26 @@ if dialog.OK: #if the person presses OK
 elif dialog.Cancel: #if the person presses Cancel 
     core.quit()
 
-## Defining columns and preparing the pandas data frame for recorded data ##
-columns = ["time_stamp", "id", "age", "gender","trial", "word", "wordtype", "reaction_time", "decision"]
+#defining columns and preparing the pandas data frame for recorded data 
+columns = ["time_stamp", "id", "age", "gender","trial", "word", "wordtype", "reaction_time", "decision", "trigger_word" "trigger_decision"]
 logfile = pd.DataFrame(columns=columns)
 
 #### TEXTS ####
-intro_text = "Hello ..."
-outro_text = "Thank you ..."
+intro_text = """ Velkommen til eksperimentet. \n\n
+Du vil blive præsenteret for nogle ord et ad gangen.  \n\n
+Din opgave er at svare på, om ordet er et rigtigt dansk ord ved at taste ‘j’ for ja, eller om ordet ikke er et rigtigt dansk ord (‘n’ for nej).  \n\n
+Alle rigtige ord er kendte danske ord.  \n\n
+Du bedes indikere dit svar hurtigst muligt. Der kommer tre prøve-trials, når du er klar (tryk på en tast).
+"""
 
-trial_text = "Welcome to the trial ..."
+outro_text = "Eksperimentet er nu færdigt. Tusind tak for din deltagelse."
 
-#### Wordlists ####
+trial_outro_text = """ Du har nu gennemført de tre prøve-trials. \n\n 
+Eksperimentet indeholder 63 ord. \n\n 
+Tryk på en tast, når du er klar til at begynde eksperimentet.
+"""
+
+#### WORDLISTS ####
 import random
 
 # defining the words
@@ -118,11 +127,11 @@ def fix_cross(seconds):
     core.wait(seconds)
 
 # displaying stimuli
-def show_stimuli(word,wordtype):
-    for frame in range(MAX_FRAMES):
+def show_stimuli(word, wordtype):
+    for frame in range(MAX_FRAMES): #for loop to ensure that the trigger is turned on the first frame that the stimuli is shown
         stim = visual.TextStim(win, text = word, height = 0.3)
         stim.draw()
-        if frame == 0:
+        if frame == 1:
             win.callOnFlip(setParallelData, word_trigger(wordtype))
             pullTriggerDown = True
         win.flip()
@@ -130,17 +139,6 @@ def show_stimuli(word,wordtype):
             win.callOnFlip(setParallelData, 0)
             pullTriggerDown = False
     clock.reset()
-
-    keypress = event.waitKeys(keyList=keys)
-    if keypress[0] == "j":
-        decision = "ja"
-    elif keypress[0] == "n":
-        decision = "nej"
-    elif keypress[0] == "escape":  # escape key to quit the programme
-        logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
-        logfile.to_csv(logfile_name)
-        core.quit()
-    reaction_time = clock.getTime()
 
 # setting triggers
 def word_trigger(wordtype):
@@ -165,10 +163,12 @@ def decision_trigger(wordtype, decision):
     elif wordtype == "fully_shuffle" and decision == "nej":
         TRIG_D = 23
 
-
 keys = ["j", "n", "escape"] # "j" for "JA" and "n" for "NEJ"
 
 ##### RUNNING THE EXPERIMENT #####
+# info text 1
+info(intro_text)
+
 # trial run
 for n in range(len(trial_words)):
     fix_cross(trial_fixation_time[n])
@@ -178,10 +178,23 @@ for n in range(len(trial_words)):
     if keypress[0] == "escape":  # escape key to quit the programme
         core.quit()
 
+# end of trial run text
+info(trial_outro_text)
+
 # real experiment
 for n in range(len(word_dict_shuffled)):
     fix_cross(numbers[n])
-    show_stimuli(list(word_dict_shuffled)[n])
+    show_stimuli(list(word_dict_shuffled)[n], list(word_dict_shuffled.values())[n]) #values() defined for wordtype
+
+    keypress = event.waitKeys(keyList=keys)
+    if keypress[0] == "j":
+        decision = "ja"
+        reaction_time = clock.getTime()
+    elif keypress[0] == "n":
+        decision = "nej"
+        reaction_time = clock.getTime()
+    elif keypress[0] == "escape":  # escape key to quit the programme
+        core.quit()
 
     logfile = logfile.append({
         "time_stamp": date,
@@ -192,6 +205,8 @@ for n in range(len(word_dict_shuffled)):
         "word": list(word_dict_shuffled)[n],
         "wordtype": list(word_dict_shuffled.values())[n],
         "decision": decision,
+        "trigger_word": word_trigger(list(word_dict_shuffled)[n]),
+        "trigger_decision": decision_trigger(list(word_dict_shuffled.values())[n], decision), #values() defined for wordtype
         "reaction_time": reaction_time}, ignore_index = True)
 
 # Defining the logfile name (NB: this solution requires us to have a "logfiles folder")
@@ -199,3 +214,6 @@ logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
 
 # Saving the data our directory
 logfile.to_csv(logfile_name)
+
+# end of experiment text
+info(outro_text)
