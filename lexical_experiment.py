@@ -131,6 +131,7 @@ def show_stimuli(word, wordtype):
     for frame in range(MAX_FRAMES): #for loop to ensure that the trigger is turned on the first frame that the stimuli is shown
         stim = visual.TextStim(win, text = word, height = 0.3)
         stim.draw()
+        
         if frame == 1:
             win.callOnFlip(setParallelData, word_trigger(wordtype))
             pullTriggerDown = True
@@ -189,9 +190,13 @@ for n in range(len(word_dict_shuffled)):
     keypress = event.waitKeys(keyList=keys)
     if keypress[0] == "j":
         decision = "ja"
+        win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
+        pullTriggerDown = True
         reaction_time = clock.getTime()
     elif keypress[0] == "n":
         decision = "nej"
+        win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
+        pullTriggerDown = True
         reaction_time = clock.getTime()
     elif keypress[0] == "escape":  # escape key to quit the programme
         core.quit()
