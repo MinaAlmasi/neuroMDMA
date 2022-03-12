@@ -45,7 +45,7 @@ logfile = pd.DataFrame(columns=columns)
 intro_text = """ Velkommen til eksperimentet. \n\n
 Du vil blive præsenteret for nogle ord et ad gangen.  \n\n
 Din opgave er at svare på, om ordet er et rigtigt dansk ord. 
-Tast ‘J’ for ja, hvis det er et dansk ord og ‘N’ for nej, hvis det ikke er. \n\n
+Tast 'J' for ja, hvis det er et dansk ord og 'N' for nej, hvis det ikke er. \n\n
 Alle rigtige ord er kendte danske ord.  \n\n
 Du bedes indikere dit svar hurtigst muligt.\n\n
 Før det rigtige eksperiment begynder, kommer der en prøverunde. \n\n
