@@ -8,7 +8,7 @@ import pandas as pd
 import os
 import numpy as np
 import random
-from triggers import setParallelData
+#from triggers import setParallelData
 
 # Monitor parameters
 MON_DISTANCE = 60  # Distance between subject's eyes and monitor
@@ -17,7 +17,7 @@ MON_SIZE = [1200, 1000]  # Pixel-dimensions of your monitor
 FRAME_RATE = 60 # Hz  [120]
 SAVE_FOLDER = 'faceWord_exp_data'  # Log is saved to this folder. The folder is created if it does not exist.
 RUNS = 3 # Number of sessions to loop over (useful for EEG experiment)
-MAX_DURATION_SEC = 20
+MAX_DURATION_SEC = 10
 MAX_FRAMES = FRAME_RATE * MAX_DURATION_SEC
 
 
@@ -107,10 +107,13 @@ path = "logfiles/"
 clock = core.Clock()
 pullTriggerDown = False
 
+# setting up allowed keys 
+keys = ["j", "n", "escape"] # "j" for "JA" and "n" for "NEJ"
+
 ##### SETTING UP FUNCTIONS #####
 # displaying text
-def info(string, wait = 0):
-    disp = visual.TextStim(win, text=string, height=0.2)
+def info(string, height, wait = 0) :
+    disp = visual.TextStim(win, text=string, height=height)
     disp.draw()
     win.flip()
     core.wait(wait)
@@ -127,19 +130,30 @@ def fix_cross(seconds):
     core.wait(seconds)
 
 # displaying stimuli
+def draw_stimuli(word):
+    stim = visual.TextStim(win, text = word, height = 0.3)
+    stim.draw()
+
+'''
 def show_stimuli(word, wordtype):
     for frame in range(MAX_FRAMES): #for loop to ensure that the trigger is turned on the first frame that the stimuli is shown
         stim = visual.TextStim(win, text = word, height = 0.3)
         stim.draw()
         
         if frame == 1:
-            win.callOnFlip(setParallelData, word_trigger(wordtype))
-            pullTriggerDown = True
+            #win.callOnFlip(setParallelData, word_trigger(wordtype))
+            #pullTriggerDown = True
+            clock.reset()
+
         win.flip()
-        if pullTriggerDown:
-            win.callOnFlip(setParallelData, 0)
-            pullTriggerDown = False
-    clock.reset()
+        key = event.getKeys(keyList=keys)
+        
+        if len(key) > 0: 
+            break
+        #if pullTriggerDown:
+            #win.callOnFlip(setParallelData, 0)
+            #pullTriggerDown = False
+'''
 
 # setting triggers
 def word_trigger(wordtype):
@@ -168,46 +182,61 @@ def decision_trigger(wordtype, decision):
     
     return TRIG_D
 
-keys = ["j", "n", "escape"] # "j" for "JA" and "n" for "NEJ"
-
 ##### RUNNING THE EXPERIMENT #####
 # info text 1
-info(intro_text)
+info(intro_text, 0.08)
 
 # trial run
 for n in range(len(trial_words)):
     fix_cross(trial_fixation_time[n])
-    show_stimuli(trial_words[n], trial_wordtype[n])
+    draw_stimuli(trial_words[n])
+    win.flip()
+    event.waitKeys(keyList = keys)
 
-    keypress = event.waitKeys(keyList=keys)
-    if keypress[0] == "escape":  # escape key to quit the programme
-        core.quit()
 
 # end of trial run text
-info(trial_outro_text)
+info(trial_outro_text, 0.1)
 
 # real experiment
 for n in range(len(word_dict_shuffled)):
     fix_cross(numbers[n])
-    show_stimuli(list(word_dict_shuffled.keys())[n], list(word_dict_shuffled.values())[n]) #values() defined for wordtype
 
-    keypress = event.waitKeys(keyList=keys)
-    if keypress[0] == "j":
-        decision = "ja"
-        win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
-        pullTriggerDown = True
-        reaction_time = clock.getTime()
-    elif keypress[0] == "n":
-        decision = "nej"
-        win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
-        pullTriggerDown = True
-        reaction_time = clock.getTime()
-    elif keypress[0] == "escape":  # escape key to quit the programme
-        core.quit()
+    for frame in range(MAX_FRAMES): #for loop to ensure that the trigger is turned on the first frame that the stimuli is shown
+        draw_stimuli(list(word_dict_shuffled.keys())[n])
+        
+        if frame == 1:
+            #win.callOnFlip(setParallelData, word_trigger(list(word_dict_shuffled.values())[n]))
+            #pullTriggerDown = True
+            clock.reset()
 
-    if pullTriggerDown: 
-                win.callOnFlip(setParallelData, 0)
-                pullTriggerDown = False
+        win.flip()
+        key = event.getKeys(keyList=keys)
+        #if pullTriggerDown:
+            #win.callOnFlip(setParallelData, 0)
+            #pullTriggerDown = False
+        
+        try:
+            if key[0] == "j":
+                decision = "ja"
+                #win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
+                #pullTriggerDown = True
+                reaction_time = clock.getTime()
+                break
+            elif key[0] == "n":
+                decision = "nej"
+                #win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
+                #pullTriggerDown = True
+                reaction_time = clock.getTime()
+                break
+            elif key[0] == "escape": # escape key to quit the programme
+                core.quit()
+        except:
+            len(key) == 0 # if no key is pressed, the loop will continue
+    '''
+        if pullTriggerDown: 
+            win.callOnFlip(setParallelData, 0)
+            pullTriggerDown = False
+    '''
 
     logfile = logfile.append({
         "time_stamp": date,
@@ -218,8 +247,8 @@ for n in range(len(word_dict_shuffled)):
         "word": list(word_dict_shuffled.keys())[n],
         "wordtype": list(word_dict_shuffled.values())[n],
         "decision": decision,
-        "trigger_word": word_trigger(list(word_dict_shuffled)[n]),
-        "trigger_decision": decision_trigger(list(word_dict_shuffled.values())[n], decision), #values() defined for wordtype
+        #"trigger_word": word_trigger(list(word_dict_shuffled)[n]),
+        #"trigger_decision": decision_trigger(list(word_dict_shuffled.values())[n], decision), #values() defined for wordtype
         "reaction_time": reaction_time}, ignore_index = True)
 
 # Defining the logfile name (NB: this solution requires us to have a "logfiles folder")
@@ -229,4 +258,4 @@ logfile_name = "logfiles/logfile_{}_{}.csv".format(ID, date)
 logfile.to_csv(logfile_name)
 
 # end of experiment text
-info(outro_text)
+info(outro_text, 0.1)
