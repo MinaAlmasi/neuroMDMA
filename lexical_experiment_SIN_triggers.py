@@ -17,7 +17,7 @@ MON_SIZE = [1200, 1000]  # Pixel-dimensions of your monitor
 FRAME_RATE = 60 # Hz  [120]
 SAVE_FOLDER = 'faceWord_exp_data'  # Log is saved to this folder. The folder is created if it does not exist.
 RUNS = 3 # Number of sessions to loop over (useful for EEG experiment)
-MAX_DURATION_SEC = 10
+MAX_DURATION_SEC = 20 #max duration of each trial 
 MAX_FRAMES = FRAME_RATE * MAX_DURATION_SEC
 
 
@@ -38,35 +38,36 @@ elif dialog.Cancel: #if the person presses Cancel
     core.quit()
 
 #defining columns and preparing the pandas data frame for recorded data 
-columns = ["time_stamp", "id", "age", "gender","trial", "word", "wordtype", "reaction_time", "decision", "trigger_word" "trigger_decision"]
+columns = ["time_stamp", "id", "age", "gender","trial", "word", "wordtype", "reaction_time", "decision", "trigger_word", "trigger_decision"]
 logfile = pd.DataFrame(columns=columns)
 
 #### TEXTS ####
 intro_text = """ Velkommen til eksperimentet. \n\n
 Du vil blive præsenteret for nogle ord et ad gangen.  \n\n
-Din opgave er at svare på, om ordet er et rigtigt dansk ord ved at taste ‘j’ for ja, eller om ordet ikke er et rigtigt dansk ord (‘n’ for nej).  \n\n
+Din opgave er at svare på, om ordet er et rigtigt dansk ord. 
+Tast ‘J’ for ja, hvis det er et dansk ord og ‘N’ for nej, hvis det ikke er. \n\n
 Alle rigtige ord er kendte danske ord.  \n\n
-Du bedes indikere dit svar hurtigst muligt. Der kommer tre prøve-trials, når du er klar (tryk på en tast).
+Du bedes indikere dit svar hurtigst muligt.\n\n
+Før det rigtige eksperiment begynder, kommer der en prøverunde. \n\n
+Tryk på en vilkårlig tast, når du er klar til at starte prøverunden. 
 """
 
 outro_text = "Eksperimentet er nu færdigt. Tusind tak for din deltagelse."
 
-trial_outro_text = """ Du har nu gennemført de tre prøve-trials. \n\n 
-Eksperimentet indeholder 63 ord. \n\n 
-Tryk på en tast, når du er klar til at begynde eksperimentet.
+trial_outro_text = """ Du har nu gennemført prøverunden.  \n\n 
+Tryk på en vilkårlig tast, når du er klar til at begynde eksperimentet.
 """
 
 #### WORDLISTS ####
-import random
-
 # defining the words
-real = ["krone", "penge", "minut", "grund", "måned", "skole", "aften", "parti", "antal", "musik", "kirke", "sæson", "kraft", "aktie", "medie", "firma", "hoved", "pause", "værdi", "butik", "fokus"]
-center_shuffle = ["knore", "pnege", "munit", "gnurd", "menåd", "sloke", "atfen", "patri", "atnal", "misuk", "krike", "sosæn", "karft", "atike", "meide", "frima", "hevod", "pasue", "vrædi", "bituk", "fukos"]
-fully_shuffle = ["rekon", "gepen", "nimtu", "drugn", "dåmen", "koles", "netaf", "irtap", "talan", "iksum", "ekkir", "næsno", "tarfk", "etiak", "emeid", "arfim", "vedoh", "sapeu", "ridæv", "iktub", "sofku"]
+real = ["krone", "penge", "minut", "grund", "måned", "skole", "aften", "parti", "antal", "musik", "kirke", "sæson", "kraft", "aktie", "medie", "firma", "hoved", "pause", "værdi", "butik", "fokus", "årsag", "april", "besøg", "ønske", "natur", "sprog", "bolig", "roman", "alvor", "titel"]
+center_shuffle = ["knore", "pnege", "munit", "gnurd", "menåd", "sloke", "atfen", "patri", "atnal", "misuk", "krike", "sosæn", "karft", "atike", "meide", "frima", "hevod", "pasue", "vrædi", "bituk", "fukos", "åsarg", "arpil", "bøseg", "ønkse", "nutar", "sporg", "bilog", "ramon", "avlor", "tetil"]
+fully_shuffle = ["rekon", "gepen", "nimtu", "drugn", "dåmen", "koles", "netaf", "irtap", "talan", "iksum", "ekkir", "næsno", "tarfk", "etiak", "emeid", "arfim", "vedoh", "sapeu", "ridæv", "iktub", "sofku", "garså", "lipra", "gøbes", "kønse", "urtan", "grops", "obgil", "omarn", "lavro", "letti"]
+foreign = ["ᚴᚱᛟᚾᛖ", "ᛈᛖᚾᚷᛖ", "ᛗᛁᚾᚢᛏ", "ᚷᚱᚢᚾᛞ", "ᛗᚨᚾᛖᛞ", "ᛋᚴᛟᛚᛖ", "ᚨᚠᛏᛖᚾ", "ᛈᚨᚱᛏᛁ", "ᚨᚾᛏᚨᛚ", "ᛗᚢᛋᛁᚴ", "ᚴᛁᚱᚴᛖ", "ᛋᛖᛋᛟᚾ", "ᚴᚱᚨᚠᛏ", "ᚨᚴᛏᛁᛖ", "ᛗᛖᛞᛁᛖ", "ᚠᛁᚱᛗᚨ", "ᚺᛟᚡᛖᛞ", "ᛈᚨᚢᛋᛖ", "ᚡᛖᚱᛞᛁ", "ᛒᚢᛏᛁᚴ", "ᚠᛟᚴᚢᛋ", "ᚨᚱᛋᚨᚷ", "ᚨᛈᚱᛁᛚ", "ᛒᛖᛋᛟᚷ", "ᛟᚾᛋᚴᛖ", "ᚾᚨᛏᚢᚱ", "ᛋᛈᚱᛟᚷ", "ᛒᛟᛚᛁᚷ", "ᚱᛟᛗᚨᚾ", "ᚨᛚᚡᛟᚱ", "ᛏᛁᛏᛖᛚ"]
 
 # combining the lists
-unshuffled = real + center_shuffle + fully_shuffle
-labels = ("real," * len(real) + "center_shuffle," * len(center_shuffle) + "fully_shuffle," * len(fully_shuffle)).split(",")
+unshuffled = real + center_shuffle + fully_shuffle + foreign
+labels = ("real," * len(real) + "center_shuffle," * len(center_shuffle) + "fully_shuffle," * len(fully_shuffle)+ "foreign,"*len(foreign)).split(",")
 labels = labels[0:-1]
 
 # adding word type
@@ -78,9 +79,9 @@ random.shuffle(l) #shuffling the list
 word_dict_shuffled = dict(l) #remaking the dictionary
 
 # trial words
-trial_words = ["debat", "dabet", "betad"]
-trial_wordtype = ["real", "center_shuffle", "fully_shuffle"]
-trial_fixation_time = [2, 4, 3]
+trial_words = ["debat", "dabet", "betad", "ᛞᛖᛒᚨᛏ"]
+trial_wordtype = ["real", "center_shuffle", "fully_shuffle", "foreign"]
+trial_fixation_time = [2, 4, 3, 2]
 
 #### SETTING UP EXPERIMENT ####
 # setting up window
@@ -122,7 +123,7 @@ def info(string, height, wait = 0) :
 
 # displaying fixation cross
 stim_fix = visual.TextStim(win, '+')
-numbers = np.random.uniform(low=2.0, high=5.0, size=63) #defining the varying secs fixation crosses
+numbers = np.random.uniform(low=2.0, high=5.0, size=124) #defining the varying secs fixation crosses
 
 def fix_cross(seconds):
     stim_fix.draw()
@@ -133,27 +134,6 @@ def fix_cross(seconds):
 def draw_stimuli(word):
     stim = visual.TextStim(win, text = word, height = 0.3)
     stim.draw()
-
-'''
-def show_stimuli(word, wordtype):
-    for frame in range(MAX_FRAMES): #for loop to ensure that the trigger is turned on the first frame that the stimuli is shown
-        stim = visual.TextStim(win, text = word, height = 0.3)
-        stim.draw()
-        
-        if frame == 1:
-            #win.callOnFlip(setParallelData, word_trigger(wordtype))
-            #pullTriggerDown = True
-            clock.reset()
-
-        win.flip()
-        key = event.getKeys(keyList=keys)
-        
-        if len(key) > 0: 
-            break
-        #if pullTriggerDown:
-            #win.callOnFlip(setParallelData, 0)
-            #pullTriggerDown = False
-'''
 
 # setting triggers
 def word_trigger(wordtype):
@@ -193,7 +173,6 @@ for n in range(len(trial_words)):
     win.flip()
     event.waitKeys(keyList = keys)
 
-
 # end of trial run text
 info(trial_outro_text, 0.1)
 
@@ -209,13 +188,13 @@ for n in range(len(word_dict_shuffled)):
             #pullTriggerDown = True
             clock.reset()
 
-        win.flip()
+        win.flip() #flipping the window to show the stimuli
         key = event.getKeys(keyList=keys)
         #if pullTriggerDown:
             #win.callOnFlip(setParallelData, 0)
             #pullTriggerDown = False
         
-        try:
+        try: #try statement evaluating keypresses 
             if key[0] == "j":
                 decision = "ja"
                 #win.callOnFlip(setParallelData, decision_trigger(list(word_dict_shuffled.values())[n], decision))
@@ -237,7 +216,7 @@ for n in range(len(word_dict_shuffled)):
             win.callOnFlip(setParallelData, 0)
             pullTriggerDown = False
     '''
-
+    # appending the data from one trial to the logfile before the next loop starts
     logfile = logfile.append({
         "time_stamp": date,
         "id": ID,
